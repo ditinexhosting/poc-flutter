@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_login_facebook/flutter_login_facebook.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:fshare/home_screen.dart';
+import 'package:fshare/share_screen.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_insta/flutter_insta.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -40,16 +42,15 @@ class _LoginState extends State<Login> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Text(name!),
-                // image != null
-                //     ? Container(
-                //   height: 200,
-                //   width: 200,
-                //   decoration: BoxDecoration(
-                //       image: DecorationImage(image: NetworkImage(image!)),
-                //       shape: BoxShape.circle),
-                // )
-                //     : Container(),
+                ElevatedButton(
+          child: const Text('Open route'),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const Share()),
+            );
+          },
+        ),
                 FlatButton(
                   color: Colors.teal,
                   child: const Text(
