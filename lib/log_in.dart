@@ -7,7 +7,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:fshare/home_screen.dart';
 import 'package:fshare/share_screen.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_insta/flutter_insta.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -59,19 +58,22 @@ class _LoginState extends State<Login> {
                   ),
                   onPressed: () async {
                     final FacebookLoginResult result =
-                    await facebookSignIn.logIn();
+                    await facebookSignIn.logIn(permissions: [
+                      FacebookPermission.publicProfile,
+                      FacebookPermission.userPosts,
+                    ]);
 
                     switch (result.status) {
                       case FacebookLoginStatus.success:
                         final FacebookAccessToken ? accessToken = result.accessToken;
-                        final graphResponse = await http.get(Uri.parse('https://graph.facebook.com/v2.12/me?fields=first_name,picture&access_token=${accessToken!.token}')
+                        /*final graphResponse = await http.get(Uri.parse('https://graph.facebook.com/v2.12/me?fields=first_name,picture&access_token=${accessToken!.token}')
                         );
                         final profile = jsonDecode(graphResponse.body);
                         print(profile);
                         setState(() {
                           name = profile['first_name'];
                           image = profile['picture']['data']['url'];
-                        });
+                        });*/
                         print('''
            Logged in!
            
@@ -82,7 +84,7 @@ class _LoginState extends State<Login> {
            Declined permissions: ${accessToken.declinedPermissions}
            ''');
 
-                        Navigator.push(
+                        /*Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) =>
@@ -91,13 +93,12 @@ class _LoginState extends State<Login> {
                                     pic: image,
                                   )
                           ),
-                        );
+                        );*/
 
                         break;
                       case FacebookLoginStatus.cancel:
-                        print('Login cancelled by the user.');
                         Fluttertoast.showToast(
-                            msg: "Something went wrong with the login process Please try later",
+                            msg: "Failed to login. Please try again.",
                             fontSize: 16,
                             backgroundColor: Colors.orange[100],
                             textColor: Colors.white,
@@ -107,7 +108,7 @@ class _LoginState extends State<Login> {
                         print('Something went wrong with the login process.\n'
                             'Here\'s the error Facebook gave us: ${result.error}');
                         Fluttertoast.showToast(
-                            msg: "Something went wrong with the login process Please try later",
+                            msg: "Failed to login. Please try again.",
                             fontSize: 16,
                             backgroundColor: Colors.orange[100],
                             textColor: Colors.white,

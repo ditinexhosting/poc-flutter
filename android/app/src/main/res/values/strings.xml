@@ -3,11 +3,11 @@
     <string name="app_name">fshare</string>
 
     <!-- Replace "000000000000" with your Facebook App ID here. -->
-    <string name="facebook_app_id">612499886725912</string>
-
+    <string name="facebook_app_id">228978622682139</string>
+    <string name="facebook_client_token">3d068c172d4e226d60bf4b5abcb1c762</string>
     <!--
       Replace "000000000000" with your Facebook App ID here.
       **NOTE**: The scheme needs to start with `fb` and then your ID.
     -->
-    <string name="fb_login_protocol_scheme">fb612499886725912</string>
+    <string name="fb_login_protocol_scheme">fb228978622682139</string>
 </resources>
