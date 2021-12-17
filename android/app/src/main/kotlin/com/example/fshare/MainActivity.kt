@@ -28,7 +28,7 @@ import java.util.*
 
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "samples.flutter.dev/battery"
+    private val CHANNEL = "samples.flutter.dev/fbshare"
     lateinit var callbackManager: CallbackManager
     lateinit var shareDialog: ShareDialog
     lateinit var flutterCallback: MethodChannel.Result
@@ -40,11 +40,11 @@ class MainActivity : FlutterActivity() {
             // Note: this method is invoked on the main thread.
             call, result ->
             flutterCallback = result
-            if (call.method == "getBatteryLevel") {
+            if (call.method == "getShareStatus") {
                 val link : String? = call.argument<String>("link")
                 val quote : String? = call.argument<String>("quote")
                 val hashtag : String? = call.argument<String>("hashtag")
-                getBatteryLevel(link, quote, hashtag)
+                getShareStatus(link, quote, hashtag)
             } else {
                 result.notImplemented()
             }
@@ -52,7 +52,7 @@ class MainActivity : FlutterActivity() {
         
     }
     
-    private fun getBatteryLevel(link: String?, quote: String?, hashtag: String?){
+    private fun getShareStatus(link: String?, quote: String?, hashtag: String?){
 
         callbackManager = CallbackManager.Factory.create()
         shareDialog = ShareDialog(this);
@@ -108,12 +108,15 @@ class MainActivity : FlutterActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.d("WTF >>", "WTF >> Activity Happen "+resultCode)
-        if(resultCode==0)
-            flutterCallback.error("UNAVAILABLE", "Failed to share.", null)
-        else
-            flutterCallback.success("Success code : "+resultCode)
-        callbackManager.onActivityResult(requestCode, resultCode, data)
+        // Handle only sharer activity call
+        if(requestCode == 64207 && this::flutterCallback.isInitialized){
+            Log.d("WTF >>", "WTF >> Activity Happen "+requestCode+" -- "+resultCode)
+            if(resultCode==0)
+                flutterCallback.error("UNAVAILABLE", "fail", null)
+            else
+                flutterCallback.success("success")
+            callbackManager.onActivityResult(requestCode, resultCode, data)
+        }
     }
 
 }

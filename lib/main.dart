@@ -5,7 +5,7 @@ import 'log_in.dart';
 
 void main() {
   runApp( const MaterialApp(
-    debugShowCheckedModeBanner: false,
+    //debugShowCheckedModeBanner: false,
     home: Login(),
   ),
   );

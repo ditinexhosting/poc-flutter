@@ -15,39 +15,96 @@ class Share extends StatefulWidget {
 }
 
 class _ShareState extends State<Share> {
-  static const platform = const MethodChannel('samples.flutter.dev/battery');
-  String _batteryLevel =
-      'Battery Level';
+  static const platform = const MethodChannel('samples.flutter.dev/fbshare');
+  TextEditingController linkController = TextEditingController();
+  TextEditingController quoteController = TextEditingController();
+  TextEditingController hashtagController = TextEditingController();
 
-  _ShareState(){
-    
+  String shareStatus = "";
+
+  @override
+  void dispose() {
+    linkController.dispose();
+    quoteController.dispose();
+    hashtagController.dispose();
+    super.dispose();
   }
       
-  Future<void> _getBatteryLevel() async {
-    String batteryLevel;
+  Future<void> _getShareStatus(String link,{String quote='',String hashtag=''}) async {
+    String _shareStatus;
     try {
-      final String? result = await platform.invokeMethod('getBatteryLevel',{'link':'https://www.google.com','quote':'Hello Google','hashtag':'#google'});
-      batteryLevel = 'Battery level at $result % .';
+      final String? result = await platform.invokeMethod('getShareStatus',{'link':link,'quote':quote,'hashtag':hashtag});
+      _shareStatus = result!;
     } on PlatformException catch (e) {
-      batteryLevel = "Failed to get battery level: '${e.message}'.";
+      _shareStatus = "Failed to get battery level: '${e.message}'.";
     }
-    setState(() {
-      _batteryLevel = batteryLevel;
-    });
+    print(_shareStatus);
+    /*setState(() {
+      shareStatus = _shareStatus;
+    });*/
   }
 
-  Future<dynamic> _handleMethod(MethodCall call) async {
-    switch(call.method) {
-      case "message":
-        debugPrint(call.arguments);
-        return new Future.value("");
-    }
+  void submitPup(BuildContext context) {
+    _getShareStatus(linkController.text.isEmpty?'https://www.facebook.com':linkController.text,quote: quoteController.text,hashtag:hashtagController.text);
   }
+
 
   @override
   Widget build(BuildContext context) {
-    platform.setMethodCallHandler(_handleMethod);
-    return Material(
+    return Scaffold(
+      appBar: AppBar(
+         backgroundColor: Colors.teal,
+         title: Text('Share'),
+      ),
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                  child: TextField(
+                      controller: linkController,
+                      //onChanged: (v) => linkController.text = v,
+                      decoration: InputDecoration(
+                        labelText: 'Link',
+                    ))
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                  child: TextField(
+                      controller: quoteController,
+                      //onChanged: (v) => quoteController.text = v,
+                      decoration: InputDecoration(
+                        labelText: 'Quote',
+                    ))
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                  child: TextField(
+                      controller: hashtagController,
+                      //onChanged: (v) => hashtagController.text = v,
+                      decoration: InputDecoration(
+                        labelText: 'Hashtag',
+                    ))
+                ),
+                FlatButton(
+                  color: Colors.teal,
+                  child: const Text(
+                    'Share on facebook',
+                    style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: () { submitPup(context); }
+                ),
+                Text("Test"),
+              ]
+            )
+        )
+      )
+    );
+    /*return Material(
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -60,6 +117,6 @@ class _ShareState extends State<Share> {
           ],
         ),
       ),
-    );
+    );*/
   }
 }
