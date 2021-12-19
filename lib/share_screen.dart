@@ -1,14 +1,18 @@
 import 'dart:io';
-
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:fshare/constants.dart' as Constants;
 
 class Share extends StatefulWidget {
-  const Share({Key? key}) : super(key: key);
+  final String userId;
+  final String? extendedAccessToken;
+  const Share({Key? key, required this.userId, required this.extendedAccessToken}) : super(key: key);
 
   @override
   _ShareState createState() => _ShareState();
@@ -31,17 +35,55 @@ class _ShareState extends State<Share> {
   }
       
   Future<void> _getShareStatus(String link,{String quote='',String hashtag=''}) async {
-    String _shareStatus;
     try {
       final String? result = await platform.invokeMethod('getShareStatus',{'link':link,'quote':quote,'hashtag':hashtag});
-      _shareStatus = result!;
+      setState(() {
+        shareStatus = "Please wait while fetching ...";
+      });
+      _verifyPostPublishStatus();
     } on PlatformException catch (e) {
-      _shareStatus = "Failed to get battery level: '${e.message}'.";
+                          Fluttertoast.showToast(
+                            msg: "Sharing dialog dismissed.",
+                            fontSize: 16,
+                            toastLength: Toast.LENGTH_LONG);
     }
-    print(_shareStatus);
-    /*setState(() {
-      shareStatus = _shareStatus;
-    });*/
+  }
+
+  Future<void> _verifyPostPublishStatus() async {
+      final response = await http
+      .get(Uri.parse("https://graph.facebook.com/me/posts?fields=id,permalink_url,created_time,application&limit=1&access_token=${widget.extendedAccessToken}"));
+      final body = jsonDecode(response.body);
+      final post_id = body['data'][0]['id'];
+      final created_time = body['data'][0]['created_time'];
+      final application_id = body['data'][0].containsKey('application')?body['data'][0]['application']['id']:null;
+      var now = new DateTime.now();
+      var date = DateTime.parse(created_time);
+      var diff = now.difference(date);
+      // If Posted Successfully and Not Cancelled
+      if(application_id!=null && diff.inMinutes<2){
+
+        final response = await http
+        .get(Uri.parse("${Constants.API_URL}verify-new-post-status/${widget.userId}"));
+        final body = jsonDecode(response.body);
+        String _sharestatus = "Failed to update in backend api.";
+        if(body==true){
+          _sharestatus = "Shared successfully.";
+          Navigator.pop(context);
+        }
+        setState(() {
+          shareStatus = _sharestatus;
+        });
+
+      }
+      else{
+        setState(() {
+          shareStatus = "";
+        });
+                            Fluttertoast.showToast(
+                            msg: "Sharing failed or not accessible.",
+                            fontSize: 16,
+                            toastLength: Toast.LENGTH_LONG);
+      }
   }
 
   void submitPup(BuildContext context) {
@@ -75,6 +117,8 @@ class _ShareState extends State<Share> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 30.0),
                   child: TextField(
+                      keyboardType: TextInputType.multiline,
+                      maxLines: 2,
                       controller: quoteController,
                       //onChanged: (v) => quoteController.text = v,
                       decoration: InputDecoration(
@@ -98,25 +142,11 @@ class _ShareState extends State<Share> {
                   ),
                   onPressed: () { submitPup(context); }
                 ),
-                Text("Test"),
+                Text(shareStatus),
               ]
             )
         )
       )
     );
-    /*return Material(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(
-              child: Text('Get Battery Level'),
-              onPressed: _getBatteryLevel,
-            ),
-            Text(_batteryLevel),
-          ],
-        ),
-      ),
-    );*/
   }
 }

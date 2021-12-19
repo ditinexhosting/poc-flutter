@@ -6,7 +6,9 @@ import 'package:flutter_login_facebook/flutter_login_facebook.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:fshare/home_screen.dart';
 import 'package:fshare/share_screen.dart';
+import 'package:fshare/insight_screen.dart';
 import 'package:http/http.dart' as http;
+import 'package:fshare/constants.dart' as Constants;
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -20,6 +22,7 @@ class _LoginState extends State<Login> {
   static final FacebookLogin facebookSignIn = new FacebookLogin();
   late String  name = "", image = "";
   late String userId = "";
+  late String? extendedAccessToken = "";
 
   @override
   void initState() {
@@ -27,16 +30,36 @@ class _LoginState extends State<Login> {
     checkIfLoggedIn();
   }
 
+  Future<void> _storeUserData(data) async {
+    data['expiry'] = (data['expiry'].millisecondsSinceEpoch/1000).toInt();
+      final response = await http
+      .post(Uri.parse("${Constants.API_URL}add-or-update-user"),
+      headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'name': data['name'],
+        'user_id': data['user_id'],
+        'access_token': data['access_token'],
+        'expiry': data['expiry'].toString()
+      })
+      );
+      final body = jsonDecode(response.body);
+      print(body);
+  }
+
   void checkIfLoggedIn() async {
     final profile = await facebookSignIn.getUserProfile();
     final imgUrl = await facebookSignIn.getProfileImageUrl(width: 200);
+    final access_token = await facebookSignIn.accessToken;
     if(profile != null && imgUrl != null){
-      //print('Hello, ${imgUrl}! FB ID: ${profile.userId}');
       setState(() {
         name = profile.name!;
         userId = profile.userId;
         image = imgUrl;
+        extendedAccessToken = access_token?.token;
       });
+      _storeUserData({'name': profile.name!, 'user_id': profile.userId, 'access_token': access_token?.token, 'expiry': access_token?.expires});
     }
   }
 
@@ -59,6 +82,7 @@ class _LoginState extends State<Login> {
       switch (result.status) {
           case FacebookLoginStatus.success:
               final FacebookAccessToken ? accessToken = result.accessToken;
+              //extendedAccessToken = accessToken!.token;
               checkIfLoggedIn();
               print('''
                 Logged in!
@@ -147,7 +171,29 @@ class _LoginState extends State<Login> {
                           context,
                           MaterialPageRoute(
                               builder: (context) =>
-                                Share()
+                                Share(
+                                  userId: userId,
+                                  extendedAccessToken: extendedAccessToken
+                                )
+                          ),
+                        );
+                  }
+                ) : Container(),
+                name != "" ? FlatButton(
+                  color: Colors.teal,
+                  child: const Text(
+                    'Show Insight',
+                    style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                Insight(
+                                  userId: userId,
+                                  extendedAccessToken: extendedAccessToken
+                                )
                           ),
                         );
                   }
